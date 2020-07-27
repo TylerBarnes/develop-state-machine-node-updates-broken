@@ -4,46 +4,59 @@
  * See: https://www.gatsbyjs.org/docs/node-apis/
  */
 
+const type = `OnlyOneNodeHere`
+
+const node = {
+  id: `only-node`,
+  title: `My first node's original title`,
+  internal: {
+    contentDigest: `yep`,
+    type,
+  },
+}
+
 exports.sourceNodes = async ({ actions, reporter, getNode }) => {
-  const type = `OnlyOneNodeHere`
-
-  const node = {
-    id: `only-node`,
-    title: `My first node's original title`,
-    internal: {
-      contentDigest: `yep`,
-      type,
-    },
-  }
   await actions.createNode(node)
+}
 
-  setTimeout(() => {
-    reporter.log(`-----------------------------`)
-    reporter.log(`Starting interval node update`)
-    reporter.log(`-----------------------------`)
-    reporter.log(``)
-    setInterval(() => {
-      const time = Date.now()
+exports.onCreateDevServer = async ({ actions, reporter, getNode }) => {
+  reporter.log(`-----------------------------`)
+  reporter.log(`Starting interval node update`)
+  reporter.log(`-----------------------------`)
+  reporter.log(``)
+  let lastTitle
+  setInterval(async () => {
+    const time = Date.now()
+    const title = `My only node updated at ${time}`
 
-      node.internal = {
+    const updatedNode = getNode(`only-node`)
+
+    if (lastTitle) {
+      const nodeTitleDidntUpdateSinceLastTime = lastTitle === updatedNode.title
+
+      const logMessage = nodeTitleDidntUpdateSinceLastTime
+        ? `❌\tUpdated node title isn't updated`
+        : `✅\tUpdated node has an updated title`
+
+      console.log(`${logMessage}: "${updatedNode.title}"`)
+    }
+
+    lastTitle = updatedNode.title
+
+    const nodeToUpdateWith = {
+      ...node,
+      title,
+      internal: {
         contentDigest: String(time),
         type,
-      }
+      },
+    }
 
-      const title = `My only node updated at ${time}`
-      reporter.log(`👐\tUpdating node with title: "${title}"`)
+    reporter.log(`👐\tUpdating node with title: "${title}"`)
 
-      actions.createNode({
-        ...node,
-        title,
-      })
-
-      const updatedNode = getNode(`only-node`)
-
-      console.log(`❌\tUpdated node title isn't updated: ${updatedNode.title}`)
-      reporter.log(``)
-    }, 3000)
-  }, 6000)
+    await actions.createNode(nodeToUpdateWith)
+    reporter.log(``)
+  }, 3000)
 }
 
 exports.createPages = async ({ graphql, actions }) => {

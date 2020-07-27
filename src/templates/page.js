@@ -4,8 +4,8 @@ import { graphql } from "gatsby"
 export default ({ data }) => <h1>{data.onlyOneNodeHere.title}</h1>
 
 export const pageQuery = graphql`
-  {
-    onlyOneNodeHere {
+  query OnlyNodeQuery($id: String!) {
+    onlyOneNodeHere(id: { eq: $id }) {
       title
     }
   }
