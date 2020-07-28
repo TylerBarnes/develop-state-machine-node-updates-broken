@@ -4,6 +4,8 @@
  * See: https://www.gatsbyjs.org/docs/node-apis/
  */
 
+const a = require("./a")
+
 const type = `OnlyOneNodeHere`
 
 const node = {
@@ -31,6 +33,21 @@ exports.onCreateDevServer = async ({ actions, reporter, getNode }) => {
 
     const updatedNode = getNode(`only-node`)
 
+    const nodeToUpdateWith = {
+      ...node,
+      title,
+      internal: {
+        contentDigest: String(time),
+        type,
+      },
+    }
+
+    console.log(`--> starting nested createNode call`)
+    await a(actions.createNode, nodeToUpdateWith)
+    console.log(`--> finished nested createNode call`)
+
+    reporter.log(`👐\tUpdating node with title: "${title}"`)
+
     if (lastTitle) {
       const nodeTitleDidntUpdateSinceLastTime = lastTitle === updatedNode.title
 
@@ -42,19 +59,6 @@ exports.onCreateDevServer = async ({ actions, reporter, getNode }) => {
     }
 
     lastTitle = updatedNode.title
-
-    const nodeToUpdateWith = {
-      ...node,
-      title,
-      internal: {
-        contentDigest: String(time),
-        type,
-      },
-    }
-
-    reporter.log(`👐\tUpdating node with title: "${title}"`)
-
-    await actions.createNode(nodeToUpdateWith)
     reporter.log(``)
   }, 3000)
 }
